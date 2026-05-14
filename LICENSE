@@ -1,0 +1,11 @@
+Copyright (c) 2026 US Prime Realty. All rights reserved.
+
+MetaTag Studio is proprietary software. No part of this software, in source
+or compiled form, may be copied, modified, distributed, sublicensed, or sold
+without prior written permission from the copyright holder.
+
+This software bundles ExifTool by Phil Harvey (https://exiftool.org), which is
+distributed under its own license (Perl Artistic License / GPL). The terms of
+that license apply to the ExifTool binary and accompanying Perl library only;
+they are reproduced in resources/exiftool_files/LICENSE inside the installed
+application.
