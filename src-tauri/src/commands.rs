@@ -1,7 +1,8 @@
 use crate::engine::{self, MediaMetadata, is_supported_image};
 use crate::error::AppError;
+use crate::naming;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tauri::AppHandle;
 
 #[derive(Debug, Clone, Serialize)]
@@ -45,16 +46,42 @@ pub async fn add_paths(paths: Vec<String>) -> Result<Vec<FileEntry>, AppError> {
     Ok(out)
 }
 
+#[derive(Debug, Default, Deserialize)]
+pub struct RenameOptions {
+    #[serde(default)]
+    pub enabled: bool,
+    #[serde(default)]
+    pub prefix: String,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct ProcessOneArgs {
     pub src: String,
     pub output_dir: String,
     pub metadata: MediaMetadata,
+    #[serde(default)]
+    pub rename: RenameOptions,
 }
 
 #[derive(Debug, Serialize)]
 pub struct ProcessResult {
     pub dest: String,
+}
+
+fn unique_path(dir: &Path, stem: &str, ext: &str) -> PathBuf {
+    let dotted_ext = if ext.is_empty() { String::new() } else { format!(".{ext}") };
+    let initial = dir.join(format!("{stem}{dotted_ext}"));
+    if !initial.exists() {
+        return initial;
+    }
+    let mut i = 2;
+    loop {
+        let candidate = dir.join(format!("{stem}-{i}{dotted_ext}"));
+        if !candidate.exists() {
+            return candidate;
+        }
+        i += 1;
+    }
 }
 
 #[tauri::command]
@@ -63,10 +90,31 @@ pub async fn process_one(
     args: ProcessOneArgs,
 ) -> Result<ProcessResult, AppError> {
     let src = PathBuf::from(&args.src);
-    let file_name = src
+    let orig_file_name = src
         .file_name()
         .ok_or_else(|| AppError::InvalidPath(args.src.clone()))?;
-    let dest = PathBuf::from(&args.output_dir).join(file_name);
+    let output_dir = PathBuf::from(&args.output_dir);
+
+    let dest = if args.rename.enabled {
+        let stem_fallback = src
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("image");
+        let ext = src
+            .extension()
+            .and_then(|e| e.to_str())
+            .unwrap_or("jpg");
+        let new_stem = naming::build_output_stem(
+            &args.metadata.alt,
+            &args.metadata.title,
+            stem_fallback,
+            &args.rename.prefix,
+        );
+        let final_stem = if new_stem.is_empty() { stem_fallback.to_string() } else { new_stem };
+        unique_path(&output_dir, &final_stem, ext)
+    } else {
+        output_dir.join(orig_file_name)
+    };
 
     let written = engine::write_metadata(&app, &src, &dest, &args.metadata).await?;
     Ok(ProcessResult {

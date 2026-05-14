@@ -59,7 +59,11 @@
           args: {
             src: f.path,
             output_dir: folder,
-            metadata
+            metadata,
+            rename: {
+              enabled: app.renameEnabled,
+              prefix: app.renamePrefix
+            }
           }
         });
         ok += 1;
@@ -113,6 +117,28 @@
         {/if}
       </div>
     {/if}
+    <div class="rename-row">
+      <label class="rename-check">
+        <input type="checkbox" bind:checked={app.renameEnabled} />
+        <span>Auto-rename output files from description</span>
+      </label>
+      <label class="rename-prefix" class:dim={!app.renameEnabled}>
+        <span class="lbl">Prefix:</span>
+        <input
+          type="text"
+          placeholder="e.g. hallandale"
+          bind:value={app.renamePrefix}
+          disabled={!app.renameEnabled}
+        />
+      </label>
+      {#if app.renameEnabled}
+        <span class="rename-hint">
+          {app.renamePrefix.trim()
+            ? `→ ${app.renamePrefix.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-modern-living-room.jpeg`
+            : '→ modern-living-room.jpeg'}
+        </span>
+      {/if}
+    </div>
     <div class="actions">
       <button class="primary" disabled={!canProcess} onclick={processPhotos}>
         {busy ? 'Processing…' : 'Process Photos'}
@@ -221,6 +247,71 @@
   .actions {
     display: flex;
     justify-content: flex-end;
+  }
+
+  .rename-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    font-size: 0.88rem;
+    color: #4a4f5b;
+  }
+
+  .rename-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .rename-check input {
+    width: 16px;
+    height: 16px;
+    accent-color: #2b5fd9;
+    cursor: pointer;
+  }
+
+  .rename-prefix {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .rename-prefix.dim {
+    opacity: 0.5;
+  }
+
+  .rename-prefix .lbl {
+    color: #5a5a66;
+  }
+
+  .rename-prefix input {
+    font: inherit;
+    font-size: 0.88rem;
+    padding: 0.32rem 0.55rem;
+    border-radius: 6px;
+    border: 1px solid #d6d9e0;
+    background: #fff;
+    width: 9rem;
+    outline: none;
+  }
+
+  .rename-prefix input:focus {
+    border-color: #2b5fd9;
+    box-shadow: 0 0 0 2px rgba(43, 95, 217, 0.15);
+  }
+
+  .rename-prefix input:disabled {
+    background: #f3f4f7;
+  }
+
+  .rename-hint {
+    color: #7d8295;
+    font-variant: small-caps;
+    letter-spacing: 0.02em;
+    font-size: 0.8rem;
   }
 
   .primary {
