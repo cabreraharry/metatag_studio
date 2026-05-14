@@ -23,8 +23,7 @@ export const app = $state({
   selectedIndex: null as number | null,
   mode: 'shared' as Mode,
   shared: emptyMetadata(),
-  renameEnabled: false,
-  renamePrefix: ''
+  renameEnabled: false
 });
 
 export function selectedMetadata(): MediaMetadata {

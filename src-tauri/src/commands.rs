@@ -50,8 +50,6 @@ pub async fn add_paths(paths: Vec<String>) -> Result<Vec<FileEntry>, AppError> {
 pub struct RenameOptions {
     #[serde(default)]
     pub enabled: bool,
-    #[serde(default)]
-    pub prefix: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -108,7 +106,6 @@ pub async fn process_one(
             &args.metadata.alt,
             &args.metadata.title,
             stem_fallback,
-            &args.rename.prefix,
         );
         let final_stem = if new_stem.is_empty() { stem_fallback.to_string() } else { new_stem };
         unique_path(&output_dir, &final_stem, ext)

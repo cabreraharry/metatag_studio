@@ -14,18 +14,10 @@ pub fn slugify(input: &str, max_words: usize) -> String {
     words.join("-")
 }
 
-/// Build the output filename stem from the user's metadata, with optional prefix.
+/// Build the output filename stem from the user's metadata.
 /// Falls back from alt → title → original stem when each is empty or slugs to nothing.
-pub fn build_output_stem(alt: &str, title: &str, fallback_stem: &str, prefix: &str) -> String {
-    let body = first_non_empty_slug(&[alt, title, fallback_stem]);
-    let prefix_slug = slugify(prefix, 4);
-    if prefix_slug.is_empty() {
-        body
-    } else if body.is_empty() {
-        prefix_slug
-    } else {
-        format!("{prefix_slug}-{body}")
-    }
+pub fn build_output_stem(alt: &str, title: &str, fallback_stem: &str) -> String {
+    first_non_empty_slug(&[alt, title, fallback_stem])
 }
 
 fn first_non_empty_slug(sources: &[&str]) -> String {
@@ -70,29 +62,20 @@ mod tests {
     #[test]
     fn build_stem_uses_alt_first() {
         assert_eq!(
-            build_output_stem("Living Room", "Title", "photo123", ""),
+            build_output_stem("Living Room", "Title", "photo123"),
             "living-room"
         );
     }
 
     #[test]
-    fn build_stem_falls_back() {
+    fn build_stem_falls_back_to_title_then_stem() {
         assert_eq!(
-            build_output_stem("", "", "WhatsApp Image", ""),
+            build_output_stem("", "Modern Condo", "photo123"),
+            "modern-condo"
+        );
+        assert_eq!(
+            build_output_stem("", "", "WhatsApp Image"),
             "whatsapp-image"
         );
-    }
-
-    #[test]
-    fn build_stem_prefix() {
-        assert_eq!(
-            build_output_stem("Office Interior", "", "x", "Hallandale"),
-            "hallandale-office-interior"
-        );
-    }
-
-    #[test]
-    fn build_stem_prefix_only() {
-        assert_eq!(build_output_stem("", "", "", "Hallandale"), "hallandale");
     }
 }
