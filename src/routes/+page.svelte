@@ -59,10 +59,7 @@
           args: {
             src: f.path,
             output_dir: folder,
-            metadata,
-            rename: {
-              enabled: app.renameEnabled
-            }
+            metadata
           }
         });
         ok += 1;
@@ -116,12 +113,6 @@
         {/if}
       </div>
     {/if}
-    <div class="rename-row">
-      <label class="rename-check">
-        <input type="checkbox" bind:checked={app.renameEnabled} />
-        <span>Auto-rename output files from description</span>
-      </label>
-    </div>
     <div class="actions">
       <button class="primary" disabled={!canProcess} onclick={processPhotos}>
         {busy ? 'Processing…' : 'Process Photos'}
@@ -232,27 +223,6 @@
     justify-content: flex-end;
   }
 
-  .rename-row {
-    display: flex;
-    align-items: center;
-    font-size: 0.88rem;
-    color: #4a4f5b;
-  }
-
-  .rename-check {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .rename-check input {
-    width: 16px;
-    height: 16px;
-    accent-color: #2b5fd9;
-    cursor: pointer;
-  }
 
   .primary {
     font: inherit;

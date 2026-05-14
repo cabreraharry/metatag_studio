@@ -22,8 +22,7 @@ export const app = $state({
   files: [] as FileEntry[],
   selectedIndex: null as number | null,
   mode: 'shared' as Mode,
-  shared: emptyMetadata(),
-  renameEnabled: false
+  shared: emptyMetadata()
 });
 
 export function selectedMetadata(): MediaMetadata {
