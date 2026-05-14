@@ -97,20 +97,18 @@ fn copy_preserving_mtime(src: &Path, dest: &Path) -> Result<(), AppError> {
         .ok_or_else(|| AppError::InvalidPath(format!("Destination has no parent: {}", dest.display())))?;
     std::fs::create_dir_all(dest_parent)?;
 
-    if let (Ok(src_canon), Ok(dest_parent_canon)) = (
-        dunce::canonicalize(src),
-        dunce::canonicalize(dest_parent),
-    ) {
-        if let Some(src_parent_canon) = src_canon.parent() {
-            if src_parent_canon == dest_parent_canon && src_canon.file_name() == dest.file_name() {
-                let name = src
-                    .file_name()
-                    .and_then(|n| n.to_str())
-                    .unwrap_or("this file");
-                return Err(AppError::Other(format!(
-                    "Pick a different output folder for \"{name}\": you selected the same folder the original lives in, and MetaTag Studio writes a tagged copy (it won't overwrite your originals)."
-                )));
-            }
+    // Defense-in-depth: refuse to write a file onto itself. The caller in commands.rs
+    // already remaps same-folder writes to a "-tagged" suffix, so this branch should
+    // never fire in normal use — but if anything slips through, we don't want to
+    // clobber an original.
+    if let (Ok(src_canon), Ok(dest_canon)) =
+        (dunce::canonicalize(src), dunce::canonicalize(dest_parent).map(|p| p.join(dest.file_name().unwrap_or_default())))
+    {
+        if src_canon == dest_canon {
+            return Err(AppError::Other(format!(
+                "Refusing to overwrite original file at {}",
+                src.display()
+            )));
         }
     }
 

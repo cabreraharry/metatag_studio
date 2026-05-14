@@ -57,6 +57,37 @@ pub struct ProcessResult {
     pub dest: String,
 }
 
+fn same_folder_as_source(src: &std::path::Path, output_dir: &std::path::Path) -> bool {
+    match (dunce::canonicalize(src), dunce::canonicalize(output_dir)) {
+        (Ok(s), Ok(d)) => s.parent().map(|p| p == d.as_path()).unwrap_or(false),
+        _ => false,
+    }
+}
+
+fn build_tagged_dest(src: &std::path::Path, output_dir: &std::path::Path) -> PathBuf {
+    let stem = src.file_stem().and_then(|s| s.to_str()).unwrap_or("image");
+    let ext = src.extension().and_then(|e| e.to_str());
+
+    let make_name = |suffix_n: Option<usize>| -> String {
+        let body = match suffix_n {
+            Some(n) => format!("{stem}-tagged-{n}"),
+            None => format!("{stem}-tagged"),
+        };
+        match ext {
+            Some(e) if !e.is_empty() => format!("{body}.{e}"),
+            _ => body,
+        }
+    };
+
+    let mut candidate = output_dir.join(make_name(None));
+    let mut n: usize = 2;
+    while candidate.exists() {
+        candidate = output_dir.join(make_name(Some(n)));
+        n += 1;
+    }
+    candidate
+}
+
 #[tauri::command]
 pub async fn process_one(
     app: AppHandle,
@@ -66,7 +97,13 @@ pub async fn process_one(
     let file_name = src
         .file_name()
         .ok_or_else(|| AppError::InvalidPath(args.src.clone()))?;
-    let dest = PathBuf::from(&args.output_dir).join(file_name);
+    let output_dir = PathBuf::from(&args.output_dir);
+
+    let dest = if same_folder_as_source(&src, &output_dir) {
+        build_tagged_dest(&src, &output_dir)
+    } else {
+        output_dir.join(file_name)
+    };
 
     let written = engine::write_metadata(&app, &src, &dest, &args.metadata).await?;
     Ok(ProcessResult {
