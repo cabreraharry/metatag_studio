@@ -3,6 +3,7 @@ export type MediaMetadata = {
   alt: string;
   latitude: number | null;
   longitude: number | null;
+  address: string;
 };
 
 export type FileEntry = {
@@ -14,7 +15,7 @@ export type FileEntry = {
 export type Mode = 'shared' | 'per-image';
 
 export function emptyMetadata(): MediaMetadata {
-  return { title: '', alt: '', latitude: null, longitude: null };
+  return { title: '', alt: '', latitude: null, longitude: null, address: '' };
 }
 
 export const app = $state({

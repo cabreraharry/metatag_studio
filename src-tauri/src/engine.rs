@@ -30,6 +30,11 @@ pub struct MediaMetadata {
     pub alt: String,
     pub latitude: Option<f64>,
     pub longitude: Option<f64>,
+    // Address text from the lookup field. Stored alongside the file so the user can see
+    // what address produced the current GPS pin when revisiting the image. Not written
+    // to the image metadata itself (lat/lon are the truth).
+    #[serde(default)]
+    pub address: String,
 }
 
 impl MediaMetadata {

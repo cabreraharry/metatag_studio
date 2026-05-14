@@ -3,7 +3,6 @@
   import { app, type MediaMetadata } from './state.svelte';
   import MapPicker from './MapPicker.svelte';
 
-  let address = $state('');
   let looking = $state(false);
   let lookupMessage = $state<{ kind: 'ok' | 'err'; text: string } | null>(null);
 
@@ -15,13 +14,12 @@
 
   let meta = $derived(currentMeta());
 
-  // Address + Found message are an ephemeral lookup tool, not stored per-file. Clear
-  // them whenever the active editing target switches (selecting a different file in
-  // per-image mode, or flipping mode).
+  // Clear the transient "Found: ..." confirmation when the editor switches to a
+  // different file or mode. The address text itself lives on meta.address and persists
+  // per-file alongside lat/lon.
   let editTarget = $derived(app.mode === 'shared' ? 'shared' : `file:${app.selectedIndex}`);
   $effect(() => {
     editTarget;
-    address = '';
     lookupMessage = null;
   });
 
@@ -39,14 +37,14 @@
 
   async function lookUp() {
     lookupMessage = null;
-    if (!address.trim()) {
+    if (!meta.address.trim()) {
       lookupMessage = { kind: 'err', text: 'Type an address first.' };
       return;
     }
     looking = true;
     try {
       const res: { latitude: number; longitude: number; display_name: string } =
-        await invoke('geocode', { address });
+        await invoke('geocode', { address: meta.address });
       meta.latitude = res.latitude;
       meta.longitude = res.longitude;
       lookupMessage = {
@@ -133,7 +131,7 @@
         <input
           type="text"
           placeholder="e.g. 100 South Pointe Dr, Miami Beach, FL"
-          bind:value={address}
+          bind:value={meta.address}
           onkeydown={(e) => e.key === 'Enter' && lookUp()}
           {disabled}
         />
